@@ -1,0 +1,43 @@
+import re
+from PIL import Image
+from transformers import AutoProcessor, AutoModelForVision2Seq
+
+# Load LLaMA 3.2 Vision model
+model_name = "meta-llama/Meta-Llama-3.2-11B-Instruct-Vision"
+processor = AutoProcessor.from_pretrained(model_name)
+model = AutoModelForVision2Seq.from_pretrained(model_name)
+
+# Read Markdown file
+with open("example.md", "r", encoding="utf-8") as file:
+    content = file.read()
+
+# Correct regex pattern
+pattern = r"!image([^)]+)"
+
+# Function to extract text from an image using LLaMA 3.2 Vision
+def extract_text(image_path):
+    image = Image.open(image_path).convert("RGB")
+    inputs = processor(images=image, return_tensors="pt")
+    outputs = model.generate(**inputs)
+    return processor.batch_decode(outputs, skip_special_tokens=True)[0].strip()
+
+# Replace images with extracted text
+def replace_images_with_text(md_content):
+    matches = re.findall(pattern, md_content)
+    
+    for image_path in matches:
+        try:
+            text = extract_text(image_path)
+            md_content = md_content.replace(f"![image]({image_path})", f"![image]({text})")
+        except Exception as e:
+            print(f"Error processing {image_path}: {e}")
+
+    return md_content
+
+# Process Markdown and save
+updated_content = replace_images_with_text(content)
+
+with open("example_updated.md", "w", encoding="utf-8") as file:
+    file.write(updated_content)
+
+print("Updated Markdown saved as 'example_updated.md'.")
