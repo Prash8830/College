@@ -1,0 +1,23 @@
+def process_image_path(image_path):
+    # Example: Replace with any transformation (e.g., AI-generated caption)
+    return f"Processed_{image_path}"
+
+# Regex pattern to detect ![Image](content)
+pattern = r"!\[Image\]\((.*?)\)"
+
+# Function to replace content inside ()
+def replace_image_paths(md_content):
+    def replacement(match):
+        original_path = match.group(1)  # Extract content inside ()
+        new_content = process_image_path(original_path)  # Call function
+        return f"![Image]({new_content})"  # Replace with new content
+
+    return re.sub(pattern, replacement, md_content)
+
+# Read Markdown file
+with open("/content/new.md", "r", encoding="utf-8") as file:
+    content = file.read()
+# Process and save the updated Markdown content
+updated_md_text = replace_image_paths(content)
+
+print("Updated Markdown:\n", updated_md_text)
